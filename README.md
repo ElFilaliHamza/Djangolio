@@ -493,3 +493,6 @@ server {
 - Create a CloudFront distribution.
   > Go to the CloudFront service and click on `Create Distribution`.
   > Select the
+
+
+## Tutorial 7 - pytest
