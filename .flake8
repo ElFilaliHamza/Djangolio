@@ -1,0 +1,19 @@
+[flake8]
+# this is basicaly used to configure the styling check by flake8.
+# these are the rules to ignore .
+ignore = C101,D403,F403,F405,I100,I201,W503,W504,W291,W293,W292,E302
+exclude =
+    .git,
+    __pycache__,
+    venv
+filename = *.py
+accept-encodings = utf-8
+inline-quotes = single
+max-complexity = 12
+max-linenumber = 500
+max-line-length = 119
+multiline-quotes = double
+per-file-ignores =
+    core/project/settings/templates/settings.dev.py:F821
+    core/project/settings/templates/settings.unittests.py:F821
+    core/project/settings/post.py:F821
