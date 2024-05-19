@@ -555,8 +555,8 @@ jobs: # in here we specfy the jobs we will running and their steps which are jus
         image: postgres:14.2-alpine
         env:
           POSTGRES_DB: cooking_core
-          POSTGRES_USER: cooking_core
-          POSTGRES_PASSWORD: cooking_core
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postDB
 
     steps: # each step represent an action that will be executed in the workflow.
       - uses: actions/checkout@v2 # this is a builtin step in github .
@@ -564,7 +564,7 @@ jobs: # in here we specfy the jobs we will running and their steps which are jus
       - name: Install Poetry
         uses: abatilo/actions-poetry@v2.0.0 # this is also a built in action by a person called abatilo
         with:
-          poetry-version: 1.4.2
+          poetry-version: 1.8.3
 
       - name: Install Dependencies
         run: make install && make install-pre-commit
@@ -578,3 +578,108 @@ jobs: # in here we specfy the jobs we will running and their steps which are jus
           COOKING_CORE_SETTING_DATABASES: '{"default":{"HOST":"db"}}'
           COOKING_CORE_SETTING_LOCAL_SETTINGS_PATH: './cooking_core/project/settings/templates/settings.github.py'
 ```
+
+> Don't forget to make sure that in the workflow that the db user and pwd is correct as in the docker-compose file .
+
+- After all these setup we can now push in a new branch then we can accept and compare the pull request which will triger our workflow automatically .
+
+
+
+## Tutorial 9 - CI/CD
+
+Last but not least we will setup a CI/CD pipeline using github actions. Which is the reason why I started typing and configuraing all these stuf for . Without further to do let's jump in!
+
+### Step 1 : setup ssh comminication between our server and the github repo .
+
++ First let's generate an ssh key using this command on the powershell :
+```sh
+C:\Windows\System32\OpenSSH\ssh-keygen.exe -t rsa -b 4096 -f ./{github_ssh_key_name}
+```
+
+> Make sure you don't include a password on this ssh key to don't break the workflow automation and CI/CD things.
+
++ Now lets configure our github to hold the private key :
+  + Go to your github account and click on the settings icon on the top right corner.
+  + Then click on the "Secrets and variables" tab
+  + Choose "actions" tab .
+  + And create new secret with the name "SSH_PRIVATE_KEY" and paste the content of the private key file generated with the command right above.
+
++ Now lets store the generated public key on our Ec2 instance server :
+```sh
+sudo nano ~/.ssh/authorized_keys
+```
+> In this file we must add the public key generated with the command above.
+
++ We need two more variables which are the SSH_HOST and the SSH_USER :
+  + SSH_HOST : the ip address of the ec2 instance server.
+  + SSH_USER : the username of the ec2 instance server "ubuntu".
+
+
+### Step 2 : write the CI/CD workflow
+
++ For this end we need to configure a new workflow .yml file that will mostly contains the next configurations :
+```yml
+name: {workflow_name}
+
+on: # means that we will execute the workflow whenever we merge on the master branch a new thing.
+  push:
+    branches:
+      - master
+
+concurrency: # whenever we pushes a new thing right before the previous one is done, we will cancel the previous one and run another CI/CD workflow instead.
+  group: master
+  cancel-in-progress: true
+
+jobs:
+  quality-assurance: # run the quality assurance before deploying "Testing before deploying"
+    name: Quality Assurance
+    uses: ./.github/workflows/pr.yml
+
+  deploy: # deployment steps .
+    name: Deploy
+    needs: quality-assurance # means we need to succed in the quality workflow before deploying.
+    runs-on: ubuntu-latest
+    steps: # we have two main steps the first one is configuring the connection and the second one is updating and rebuilding the existing app.
+      - name: Configure SSH
+        env: # reference all the environement variables stored on github .
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        # Now lets run the connection commands
+        # because we are running in a blank ubuntu instance to
+        # connect to our server we need to make the ssh directory
+        # and add the ssh private key to it from the env variables.
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/github
+          chmod 600 ~/.ssh/github
+          cat >>~/.ssh/config <<END
+          Host target
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/github
+            LogLevel ERROR
+            StrictHostKeyChecking no
+          END
+      - name: Run deploy
+      # Now lets run the deployment :
+      # first ssh into the target "Ec2 server" .
+      # secondly bring down the containers .
+      # then pull the latest code from the repo.
+      # then rebuild the containers.
+      # then bring up the containers with a forced recreation tag.
+        run: |
+          ssh target "cd Cooking-Core/ && docker-compose down && git pull && docker-compose build && docker-compose up -d --force-recreate"
+```
+
++ After the workflow on github is seted up you can juste push your code and it's done , check your server it's updated automatically .
+
+
+
+## Conclusion
+
+As a junior web developper and a data scientist that aims to deploy my own solutions I needed this tutorial so much , I want to say thanks to thenewboston youtube channel team . I am very gratefull for this full explained and step by step tutorial . Now at least I have a blueprint to start with and a full working example to follow .
+Along side with a lot of best practices advice . I write this repo for me and for any other person who is interested in these such great technologies .
+If you have any questions don't hesitate to contact me on instagrame or linkedin .
+insta: https://www.instagram.com/hamza_fun_games/
+linkedin:  linkedin.com/in/hamza-el-filali-ma
