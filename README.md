@@ -72,7 +72,7 @@ python -m venv myenv
 
   - At this stage lets create the local folder and copy the settings.dev.py into it :
 
-  ```
+  ```sh
   mkdir -p local
   cp .\core\project\settings\templates\settings.dev.py .\local\
   ```
@@ -114,7 +114,7 @@ EditorConfig helps maintain consistent coding styles for multiple developers wor
 
 - Create a.editorconfig file in the root of the project.
 - Add the following content to the.editorconfig file:
-  ```
+  ```conf
   [*.{html,py}] # apply these editor settings on html and python files
   charset = utf-8
   indent_size = 8
@@ -151,7 +151,7 @@ hooks are a bunch of scripts that are run before you commit your code and checks
 - run this command to check the hooks : `poetry run pre-commit run --all-files`
 - now we need to configure ou pyproject.toml file to use the pre-commit hooks. Example of isort tool :
 
-```
+```toml
 [tool.isort]
 multi_line_output = 5
 line_length = 119
@@ -173,7 +173,7 @@ Check this out for more infos https://docs.python.org/3/library/logging.config.h
 
 - Adding the log styling package called : colorlog .
   - To well apply our styling to our logs we need to add these lines in our local/settings.py file :
-  ```
+  ```py
   LOGGING['formatters']['colored'] = {  # type: ignore
   '()': 'colorlog.ColoredFormatter',
   'format': '%(log_color)s%(asctime)s %(levelname)s %(name)s %(bold_white)s%(message)s',
@@ -199,22 +199,23 @@ Before start dockerizing lets clone the Coocking core project from github :
 * docker-compose.yml file : is a file that contains all the configuration of the services of our app . For example in our case we have a postgres service "db" and a django service "app".
 
 * **db** service : is a service that contains the postgres database.
-  `    db:
-    image: postgres:16.3-alpine
-    restart: unless-stopped
-    ports:
-      - '5432:5432'
-    environment:
-      POSTGRES_DB: cooking_core
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postDB
-    volumes:
-      - postgresql-data:/var/lib/postgresql/data
-     `
+  ```yml
+    db:
+      image: postgres:16.3-alpine
+      restart: unless-stopped
+      ports:
+        - '5432:5432'
+      environment:
+        POSTGRES_DB: cooking_core
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postDB
+      volumes:
+        - postgresql-data:/var/lib/postgresql/data
+    ```
   the image
 * **app** service : is a service that contains the django app.
 
-```
+```yml
 app:
     build: .
     restart: unless-stopped
@@ -245,7 +246,7 @@ volumes:
 - Disable the option "Block all public access".
 - Add these lines on the permissions of the bucket, more specifically on the "Cross-origin resource sharing (CORS)" :
 
-```
+```conf
 [
   {
     "AllowedHeaders": ["*"],
@@ -280,9 +281,9 @@ At this step our EC2 is ready we can click "Launch instance" button.
     - Update the ubuntu os packages :
       `sudo apt update -y && sudo apt upgrade -y`
     - Install all systme requirements :
-      ```
-      sudo apt install -y apt-transport-https ca-certificates curl software-properties-common git nginx certbot python3-certbot-nginx
-      ```
+```sh
+  sudo apt install -y apt-transport-https ca-certificates curl software-properties-common git nginx certbot python3-certbot-nginx
+```
 
 #### Setup docker on the Ec2 instance
 
@@ -293,9 +294,9 @@ Download docker gpg "GNU Privacy Guard" key used to verify the authenticity of d
 **Verifying Authenticity and Integrity: The downloaded packages are signed with Docker's GPG key. The package manager uses the GPG key stored in /usr/share/keyrings/docker-archive-keyring.gpg to verify the signature on the packages. If the signature is valid, it means that the packages were indeed created by Docker and have not been altered since they were signed. If the signature verification fails, the package manager will reject the packages, preventing installation.**
 
 - Add the docker repository to the apt sources list "so the apt package manager could recognize it when installing docker from docker officiale source" :
-  ```
-  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  ```
+```sh
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+```
 - Update the ubuntu os packages again :
   `sudo apt update -y && sudo apt upgrade -y`
 - Install docker :
@@ -323,14 +324,14 @@ Download docker gpg "GNU Privacy Guard" key used to verify the authenticity of d
 With all set, lets start configuring our project :
 
 - clone the project from github :
-  ```
+  ```sh
   git clone https://github.com/ElFilaliHamza/Cooking-core.git
   ```
 - Go to the project directory .
 - create the "local" directory for the production environement :
   > `mkdir -p local`
   - Create the settings.prod.py file `sudo nano local/settings.prod.py` and type these configurations :
-    ```
+    ```py
     DEBUG = False
     SECRET_KEY = '_u81u$mo@u!=v(esb8k9_gvo-vrlf&llb0e&f@+c&bzim&c2s_'
     CSRF_TRUSTED_ORIGINS = ['https://domain-name', 'https://www.domain-name']
@@ -355,7 +356,7 @@ First we need to remove the nginx default config file : `sudo rm /etc/nginx/site
 - Add the new nginx configuration default file : `sudo nano /etc/nginx/sites-available/default`
 - Add the following configuration :
 
-```
+```sh
 server {
     listen 80;
     server_name localhost;
@@ -402,7 +403,7 @@ After having the domain record up and running check "https://domainschecker.org/
 - Now we need to create a new config file : `sudo nano /etc/nginx/sites-available/domain.com`
 - Copy the following code and paste it in the file :
 
-```
+```sh
 server {
     listen 80 default_server;
     return 301 https://$host$request_uri;
@@ -473,7 +474,7 @@ server {
 - Update the bucket policy to allow public access.
   > Go to the bucket properties and click on the `Permissions` tab.
   > Click on `Bucket Policy` and paste the following policy:
-  ```
+  ```conf
     {
     "Version": "2012-10-17",
     "Statement": [
@@ -500,7 +501,7 @@ server {
 ### Step 1 - install dependencies
 
 lets install our dependencies first :
-```
+```sh
 poetry add pytest pytest-xdist pytest-django model-bakery
 ```
 1. pytest :
