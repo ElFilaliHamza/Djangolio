@@ -681,5 +681,9 @@ jobs:
 As a junior web developper and a data scientist that aims to deploy my own solutions I needed this tutorial so much , I want to say thanks to thenewboston youtube channel team . I am very gratefull for this full explained and step by step tutorial . Now at least I have a blueprint to start with and a full working example to follow .
 Along side with a lot of best practices advice . I write this repo for me and for any other person who is interested in these such great technologies .
 If you have any questions don't hesitate to contact me on instagrame or linkedin .
+
 insta: https://www.instagram.com/hamza_fun_games/
+
 linkedin:  linkedin.com/in/hamza-el-filali-ma
+
+As we say always : "__Don't give me the fish but teach me how to fish__".
