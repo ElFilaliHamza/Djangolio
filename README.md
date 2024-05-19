@@ -496,3 +496,85 @@ server {
 
 
 ## Tutorial 7 - pytest
+
+### Step 1 - install dependencies
+
+lets install our dependencies first :
+```
+poetry add pytest pytest-xdist pytest-django model-bakery
+```
+1. pytest :
+pytest is a mature full-featured Python testing tool that helps you write better programs. It provides a simple and scalable way to write small tests, yet supports complex functional testing for applications. With pytest, you can create test cases that are more readable and efficient.
+
+2. pytest-xdist :
+pytest-xdist is a plugin for pytest that allows you to execute tests in parallel, speeding up the testing process. This is particularly useful for large test suites that take a long time to execute sequentially. It can also be used to run tests in multiple CPUs and across multiple nodes.
+
+3. pytest-django :
+pytest-django is a plugin for pytest that provides a set of useful tools for testing Django applications. It allows you to use pytest's features with Django projects and makes it easier to test Django applications. It handles creating a test database, and can reuse the existing test database from Django’s standard test command, which speeds up the tests.
+
+4. model-bakery :
+model-bakery (formerly known as model_mommy) is a library for Django that simplifies the creation of instances of Django models. It can automatically generate instances of Django model classes, which is very useful in tests and anywhere else you need to generate model instances with filled fields according to the field types.
+
+
+### Step 2 - tests and fixtures
+
+In python a fixture is a function that is used to setup the environment for a test.
+
+> First setup the pytest configurations in the pyproject.toml file, by adding __[tool.pytest.ini_options]__ section.
+
++ Create the fixture called accounts.py in the tests package under the fixtures package {Note you have to create both of these packages manually} in Accounts folder on the project direcory "/cooking-core".
++ After creating our fixtures we must create the conftest.py which is a file used by pytest to load the fixtures.
++ In conftest.py we will import the fixtures we created in the fixtures folder.
++ Now we will create our first test file called test_api.py . And run the test file using pytest command.
+```sh
+poetry run pytest -v -rs -n auto --show-capture=no
+```
+
+
+## Tutorial 8 - GitHub Actions and Workflows
+
+### Step 1 : setup github workflow
+
++ Create the .github directory .
++ Create the workflows directory .
++ And voilla!! start typing your workflows as a .yml file extension.
+
++ On the workflow we can use theses key words :
+```yml
+name: {user-friendly-name}
+on: [pull_request, workflow_call] # thses are the events that will execute our workflow .
+
+jobs: # in here we specfy the jobs we will running and their steps which are just some bunch of commands.
+  {job-name}:
+    name: {job-user-friendly-name}
+    runs-on: ubuntu-latest
+    container: python:3.10.4-buster # this must be equivilent to the one in the Dockerfile.
+
+    services: # the services that we must run on the workflow.
+      db:
+        image: postgres:14.2-alpine
+        env:
+          POSTGRES_DB: cooking_core
+          POSTGRES_USER: cooking_core
+          POSTGRES_PASSWORD: cooking_core
+
+    steps: # each step represent an action that will be executed in the workflow.
+      - uses: actions/checkout@v2 # this is a builtin step in github .
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.0.0 # this is also a built in action by a person called abatilo
+        with:
+          poetry-version: 1.4.2
+
+      - name: Install Dependencies
+        run: make install && make install-pre-commit
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test
+        env:
+          COOKING_CORE_SETTING_DATABASES: '{"default":{"HOST":"db"}}'
+          COOKING_CORE_SETTING_LOCAL_SETTINGS_PATH: './cooking_core/project/settings/templates/settings.github.py'
+```

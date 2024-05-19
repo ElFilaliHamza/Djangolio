@@ -72,3 +72,6 @@ venv/
 # IDEs
 .DS_Store
 .idea
+
+
+private-assets
